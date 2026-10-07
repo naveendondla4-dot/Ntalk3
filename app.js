@@ -1106,3 +1106,544 @@ async function markMessagesSeen(chatId) {
    MARK MESSAGES DELIVERED
    ========================================================= */
 
+async function markMessagesDelivered(
+  chatId
+) {
+
+  if (!chatId || !uid()) return;
+
+  const { error } =
+    await sb
+      .from("messages")
+      .update({
+        delivered_at:
+          new Date().toISOString()
+      })
+      .eq("chat_id", chatId)
+      .eq(
+        "receiver_id",
+        uid()
+      )
+      .is(
+        "delivered_at",
+        null
+      );
+
+  if (error) {
+    console.error(
+      "Delivered update error:",
+      error
+    );
+  }
+}
+
+
+/* =========================================================
+   NEW CHAT BY USERNAME
+   ========================================================= */
+
+async function newChat() {
+
+  const username =
+    prompt(
+      "Enter username:"
+    );
+
+  if (!username) return;
+
+  const cleanUsername =
+    username
+      .trim()
+      .replace(/^@/, "");
+
+  const { data, error } =
+    await sb
+      .from("profiles")
+      .select(
+        "id,username,full_name,avatar_url"
+      )
+      .eq(
+        "username",
+        cleanUsername
+      )
+      .maybeSingle();
+
+  if (error) {
+
+    console.error(error);
+
+    alert(error.message);
+
+    return;
+  }
+
+  if (!data) {
+
+    alert(
+      "User not found."
+    );
+
+    return;
+  }
+
+  if (data.id === uid()) {
+
+    alert(
+      "You cannot chat with yourself."
+    );
+
+    return;
+  }
+
+  await openChat(data);
+}
+
+
+/* =========================================================
+   SEARCH USERS
+   ========================================================= */
+
+async function searchUsers(value) {
+
+  if (!uid()) return;
+
+  const query =
+    String(value || "")
+      .trim();
+
+  let request =
+    sb
+      .from("profiles")
+      .select(
+        "id,username,full_name,avatar_url"
+      )
+      .neq("id", uid());
+
+  if (query) {
+
+    request =
+      request.or(
+        `username.ilike.%${query}%,full_name.ilike.%${query}%`
+      );
+  }
+
+  const { data, error } =
+    await request
+      .order("full_name")
+      .limit(50);
+
+  if (error) {
+
+    console.error(
+      "Search error:",
+      error
+    );
+
+    return;
+  }
+
+  renderUsers(data || []);
+}
+
+
+/* =========================================================
+   MEDIA UPLOAD
+   ========================================================= */
+
+async function uploadMedia(file) {
+
+  if (!file) return;
+
+  const chat =
+    window.currentChat;
+
+  if (!chat) {
+
+    alert(
+      "First select a user."
+    );
+
+    return;
+  }
+
+  try {
+
+    const chatId =
+      window.currentChatId ||
+      await getOrCreateChat(
+        chat.user_id
+      );
+
+    const filePath =
+      `${uid()}/${Date.now()}-${file.name}`;
+
+    /*
+      Change "chat-media" below only if
+      your Supabase Storage bucket has
+      a different name.
+    */
+
+    const {
+      error: uploadError
+    } = await sb.storage
+      .from("chat-media")
+      .upload(
+        filePath,
+        file
+      );
+
+    if (uploadError) {
+
+      console.error(
+        "Upload error:",
+        uploadError
+      );
+
+      alert(
+        uploadError.message
+      );
+
+      return;
+    }
+
+    const {
+      data: publicData
+    } = sb.storage
+      .from("chat-media")
+      .getPublicUrl(
+        filePath
+      );
+
+    const fileUrl =
+      publicData?.publicUrl || "";
+
+    const type =
+      file.type.startsWith("image/")
+        ? "image"
+        : file.type.startsWith("video/")
+          ? "video"
+          : "file";
+
+    const { error } =
+      await sb
+        .from("messages")
+        .insert({
+          chat_id: chatId,
+          sender_id: uid(),
+          receiver_id:
+            chat.user_id,
+          content:
+            file.name,
+          message_type: type,
+          file_path:
+            fileUrl,
+          file_name:
+            file.name,
+          file_size:
+            file.size,
+          mime_type:
+            file.type
+        });
+
+    if (error) {
+
+      console.error(
+        "Media message error:",
+        error
+      );
+
+      alert(
+        error.message
+      );
+
+      return;
+    }
+
+    await loadMessages(
+      chatId
+    );
+
+  } catch (err) {
+
+    console.error(
+      "Media upload error:",
+      err
+    );
+
+    alert(
+      err.message ||
+      "Upload failed."
+    );
+  }
+}
+
+
+/* =========================================================
+   FILE INPUT
+   ========================================================= */
+
+function setupFileUpload() {
+
+  const input =
+    $("fileInput") ||
+    $("mediaInput");
+
+  if (!input) return;
+
+  input.addEventListener(
+    "change",
+    async event => {
+
+      const file =
+        event.target.files?.[0];
+
+      if (file) {
+        await uploadMedia(file);
+      }
+
+      input.value = "";
+    }
+  );
+}
+
+
+/* =========================================================
+   NEW CALL TARGET
+   ========================================================= */
+
+async function newCallTarget() {
+
+  const username =
+    prompt(
+      "Enter username to call:"
+    );
+
+  if (!username) return;
+
+  const cleanUsername =
+    username
+      .trim()
+      .replace(/^@/, "");
+
+  const { data, error } =
+    await sb
+      .from("profiles")
+      .select(
+        "id,username,full_name"
+      )
+      .eq(
+        "username",
+        cleanUsername
+      )
+      .maybeSingle();
+
+  if (error) {
+
+    alert(error.message);
+    return;
+  }
+
+  if (!data) {
+
+    alert(
+      "User not found."
+    );
+
+    return;
+  }
+
+  alert(
+    "Calling feature can be connected here."
+  );
+}
+
+
+/* =========================================================
+   GLOBAL BUTTON EVENTS
+   ========================================================= */
+
+function setupEvents() {
+
+  /*
+    Login
+  */
+
+  const loginButton =
+    $("loginBtn") ||
+    $("loginButton");
+
+  if (loginButton) {
+
+    loginButton.addEventListener(
+      "click",
+      doLogin
+    );
+  }
+
+
+  /*
+    Register
+  */
+
+  const registerButton =
+    $("registerBtn") ||
+    $("registerButton");
+
+  if (registerButton) {
+
+    registerButton.addEventListener(
+      "click",
+      doRegister
+    );
+  }
+
+
+  /*
+    Logout
+  */
+
+  const logoutButton =
+    $("logoutBtn") ||
+    $("logoutButton");
+
+  if (logoutButton) {
+
+    logoutButton.addEventListener(
+      "click",
+      doLogout
+    );
+  }
+
+
+  /*
+    Send
+  */
+
+  const sendButton =
+    $("sendBtn") ||
+    $("sendButton");
+
+  if (sendButton) {
+
+    sendButton.addEventListener(
+      "click",
+      sendMessage
+    );
+  }
+
+
+  /*
+    New chat
+  */
+
+  const newChatButton =
+    $("newChatBtn") ||
+    $("newChatButton");
+
+  if (newChatButton) {
+
+    newChatButton.addEventListener(
+      "click",
+      newChat
+    );
+  }
+
+
+  /*
+    New call
+  */
+
+  const callButton =
+    $("callBtn") ||
+    $("newCallBtn");
+
+  if (callButton) {
+
+    callButton.addEventListener(
+      "click",
+      newCallTarget
+    );
+  }
+
+
+  /*
+    Search
+  */
+
+  const searchInput =
+    $("searchInput") ||
+    $("userSearch");
+
+  if (searchInput) {
+
+    searchInput.addEventListener(
+      "input",
+      event => {
+        searchUsers(
+          event.target.value
+        );
+      }
+    );
+  }
+
+
+  setupMessageInput();
+  setupFileUpload();
+}
+
+
+/* =========================================================
+   INITIAL START
+   ========================================================= */
+
+document.addEventListener(
+  "DOMContentLoaded",
+  () => {
+
+    setupEvents();
+    initApp();
+
+  }
+);
+
+
+/* =========================================================
+   EXPOSE FUNCTIONS
+   ========================================================= */
+
+window.doLogin = doLogin;
+window.doRegister = doRegister;
+window.doLogout = doLogout;
+
+window.showLogin = showLogin;
+window.showRegister = showRegister;
+
+window.loadChats = loadChats;
+window.openChat = openChat;
+
+window.getOrCreateChat =
+  getOrCreateChat;
+
+window.loadMessages =
+  loadMessages;
+
+window.sendMessage =
+  sendMessage;
+
+window.newChat =
+  newChat;
+
+window.searchUsers =
+  searchUsers;
+
+window.uploadMedia =
+  uploadMedia;
+
+window.newCallTarget =
+  newCallTarget;
+
+window.markMessagesSeen =
+  markMessagesSeen;
+
+window.markMessagesDelivered =
+  markMessagesDelivered;
