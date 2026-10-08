@@ -1,1 +1,548 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#111b68"
+  >
+
+  <meta
+    name="description"
+    content="NTalk - Connect. Chat. Together."
+  >
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon.svg">
+
+  <link rel="stylesheet" href="style.css">
+
+  <title>NTalk</title>
+</head>
+
+<body>
+
+<!-- =====================================================
+     AUTH SCREEN
+     ===================================================== -->
+
+<section id="authScreen" class="auth">
+
+  <div class="auth-card">
+
+    <div class="brand">
+      <div class="logo">N</div>
+
+      <div>
+        <h1>NTalk</h1>
+        <p>Connect. Chat. Together.</p>
+      </div>
+    </div>
+
+
+    <!-- LOGIN -->
+
+    <div id="loginForm">
+
+      <div class="auth-tabs">
+
+        <button
+          type="button"
+          class="active"
+          onclick="showLogin()"
+        >
+          Login
+        </button>
+
+        <button
+          type="button"
+          onclick="showRegister()"
+        >
+          Register
+        </button>
+
+      </div>
+
+
+      <label for="loginEmail">
+        Email
+      </label>
+
+      <input
+        id="loginEmail"
+        type="email"
+        placeholder="Enter email"
+        autocomplete="email"
+      >
+
+
+      <label for="loginPassword">
+        Password
+      </label>
+
+      <input
+        id="loginPassword"
+        type="password"
+        placeholder="Enter password"
+        autocomplete="current-password"
+      >
+
+
+      <button
+        id="loginBtn"
+        type="button"
+        class="primary wide"
+      >
+        Login
+      </button>
+
+    </div>
+
+
+    <!-- REGISTER -->
+
+    <div
+      id="registerForm"
+      style="display:none;"
+    >
+
+      <div class="auth-tabs">
+
+        <button
+          type="button"
+          onclick="showLogin()"
+        >
+          Login
+        </button>
+
+        <button
+          type="button"
+          class="active"
+          onclick="showRegister()"
+        >
+          Register
+        </button>
+
+      </div>
+
+
+      <label for="registerName">
+        Full name
+      </label>
+
+      <input
+        id="registerName"
+        type="text"
+        placeholder="Enter your full name"
+        autocomplete="name"
+      >
+
+
+      <label for="registerUsername">
+        Username
+      </label>
+
+      <input
+        id="registerUsername"
+        type="text"
+        placeholder="Choose username"
+        autocomplete="username"
+      >
+
+
+      <label for="registerEmail">
+        Email
+      </label>
+
+      <input
+        id="registerEmail"
+        type="email"
+        placeholder="Enter email"
+        autocomplete="email"
+      >
+
+
+      <label for="registerPassword">
+        Password
+      </label>
+
+      <input
+        id="registerPassword"
+        type="password"
+        placeholder="Minimum 6 characters"
+        autocomplete="new-password"
+      >
+
+
+      <button
+        id="registerBtn"
+        type="button"
+        class="primary wide"
+      >
+        Create Account
+      </button>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- =====================================================
+     MAIN APPLICATION
+     ===================================================== -->
+
+<div
+  id="app"
+  class="shell"
+  style="display:none;"
+>
+
+
+  <!-- ===================================================
+       SIDEBAR
+       =================================================== -->
+
+  <aside class="sidebar">
+
+
+    <!-- BRAND -->
+
+    <div class="side-brand">
+
+      <div class="logo small">
+        N
+      </div>
+
+      <b>NTalk</b>
+
+      <button
+        id="newChatBtn"
+        type="button"
+        class="icon-btn"
+        title="New Chat"
+      >
+        +
+      </button>
+
+    </div>
+
+
+    <!-- NAVIGATION -->
+
+    <nav>
+
+      <button
+        type="button"
+        class="selected"
+      >
+        <span class="ui-icon">💬</span>
+        <span>Chats</span>
+      </button>
+
+      <button
+        type="button"
+      >
+        <span class="ui-icon">👥</span>
+        <span>People</span>
+      </button>
+
+    </nav>
+
+
+    <!-- SEARCH -->
+
+    <div class="search">
+
+      <span class="ui-icon">
+        🔍
+      </span>
+
+      <input
+        id="searchInput"
+        type="search"
+        placeholder="Search people..."
+        autocomplete="off"
+      >
+
+    </div>
+
+
+    <!-- CHAT LIST -->
+
+    <div
+      id="chatList"
+      class="chat-list"
+    >
+
+      <div class="empty-small">
+        No other users found
+      </div>
+
+    </div>
+
+
+    <!-- USER PROFILE -->
+
+    <div class="side-user">
+
+      <div
+        id="myAvatar"
+        class="avatar"
+      >
+        U
+      </div>
+
+      <div>
+
+        <strong id="myName">
+          User
+        </strong>
+
+        <small
+          id="myUsername"
+          class="muted"
+        ></small>
+
+      </div>
+
+      <button
+        id="logoutBtn"
+        type="button"
+        class="icon-btn"
+        title="Logout"
+      >
+        ↪
+      </button>
+
+    </div>
+
+  </aside>
+
+
+  <!-- ===================================================
+       MAIN
+       =================================================== -->
+
+  <main class="main">
+
+
+    <!-- CHAT LIST / CONVERSATION AREA -->
+
+    <section
+      id="conversation"
+      class="conversation"
+    >
+
+
+      <!-- CHAT HEADER -->
+
+      <header class="chat-head">
+
+
+        <button
+          type="button"
+          class="mobile-back"
+          aria-label="Back"
+        >
+          ‹
+        </button>
+
+
+        <!-- CHAT USER -->
+
+        <div class="chat-info">
+
+          <div
+            id="chatAvatar"
+            class="avatar"
+          >
+            U
+          </div>
+
+          <div>
+
+            <strong id="chatName">
+              Select a chat
+            </strong>
+
+            <small
+              id="chatUsername"
+              class="muted"
+            ></small>
+
+          </div>
+
+        </div>
+
+
+        <!-- HEADER ACTIONS -->
+
+        <div class="head-actions">
+
+          <button
+            id="callBtn"
+            type="button"
+            class="icon-btn"
+            title="Call"
+          >
+            📞
+          </button>
+
+          <button
+            type="button"
+            class="icon-btn"
+            title="Video Call"
+          >
+            📹
+          </button>
+
+          <button
+            type="button"
+            class="icon-btn"
+            title="More"
+          >
+            ⋮
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <!-- =================================================
+           MESSAGES
+           ================================================= -->
+
+      <div
+        id="messages"
+        class="messages"
+      >
+
+        <div class="empty">
+
+          <div class="logo">
+            N
+          </div>
+
+          <h2>
+            Welcome to NTalk
+          </h2>
+
+          <p>
+            Select a person to start chatting.
+          </p>
+
+        </div>
+
+      </div>
+
+
+      <!-- =================================================
+           COMPOSER
+           ================================================= -->
+
+      <div class="composer">
+
+
+        <!-- FILE INPUT -->
+
+        <input
+          id="fileInput"
+          type="file"
+          hidden
+          accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+        >
+
+
+        <!-- ATTACH -->
+
+        <button
+          id="attachBtn"
+          type="button"
+          class="attach"
+          title="Attach file"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          📎
+        </button>
+
+
+        <!-- MESSAGE INPUT -->
+
+        <input
+          id="messageInput"
+          type="text"
+          placeholder="Type a message..."
+          autocomplete="off"
+        >
+
+
+        <!-- SEND -->
+
+        <button
+          id="sendBtn"
+          type="button"
+          class="send"
+          title="Send"
+        >
+          ➤
+        </button>
+
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+
+<!-- =====================================================
+     SUPABASE
+     ===================================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="config.js"></script>
+
+<script src="app.js"></script>
+
+
+<!-- =====================================================
+     PWA
+     ===================================================== -->
+
+<script>
+if ("serviceWorker" in navigator) {
+
+  window.addEventListener("load", function () {
+
+    navigator.serviceWorker
+      .register("sw.js")
+      .then(function () {
+        console.log("NTalk Service Worker registered");
+      })
+      .catch(function (error) {
+        console.error(
+          "Service Worker registration failed:",
+          error
+        );
+      });
+
+  });
+
+}
+</script>
+
+</body>
+          </html>
