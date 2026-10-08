@@ -1,20 +1,717 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="theme-color" content="#111b68">
-<meta name="description" content="NTalk - Connect. Chat. Together.">
-<link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="icon.svg">
-<link rel="stylesheet" href="style.css">
-<title>NTalk</title>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#111827"
+  >
+
+  <meta
+    name="description"
+    content="NTalk - Real-time messaging"
+  >
+
+  <title>NTalk</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg">
+
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Supabase configuration -->
+  <script src="config.js"></script>
 </head>
+
 <body>
-<div id="app"></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="config.js"></script>
-<script src="app.js"></script>
+
+  <!-- =====================================================
+       AUTH
+       ===================================================== -->
+
+  <section id="authScreen" class="auth-screen">
+
+    <!-- LOGIN -->
+    <div id="loginForm" class="auth-card">
+
+      <div class="auth-logo">
+        <div class="logo-mark">N</div>
+        <h1>NTalk</h1>
+      </div>
+
+      <p class="auth-subtitle">
+        Connect. Chat. Share.
+      </p>
+
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+
+        <input
+          id="loginEmail"
+          type="email"
+          placeholder="Email"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="loginPassword">Password</label>
+
+        <input
+          id="loginPassword"
+          type="password"
+          placeholder="Password"
+          autocomplete="current-password"
+        >
+      </div>
+
+      <button
+        id="loginBtn"
+        type="button"
+        class="primary-btn"
+      >
+        Login
+      </button>
+
+      <p class="auth-switch">
+        Don't have an account?
+
+        <button
+          type="button"
+          class="link-btn"
+          onclick="showRegister()"
+        >
+          Create account
+        </button>
+      </p>
+
+    </div>
+
+
+    <!-- REGISTER -->
+    <div
+      id="registerForm"
+      class="auth-card"
+      style="display:none;"
+    >
+
+      <div class="auth-logo">
+        <div class="logo-mark">N</div>
+        <h1>NTalk</h1>
+      </div>
+
+      <p class="auth-subtitle">
+        Create your account
+      </p>
+
+      <div class="form-group">
+        <label for="registerName">
+          Full name
+        </label>
+
+        <input
+          id="registerName"
+          type="text"
+          placeholder="Full name"
+          autocomplete="name"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="registerUsername">
+          Username
+        </label>
+
+        <input
+          id="registerUsername"
+          type="text"
+          placeholder="Username"
+          autocomplete="username"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="registerEmail">
+          Email
+        </label>
+
+        <input
+          id="registerEmail"
+          type="email"
+          placeholder="Email"
+          autocomplete="email"
+        >
+      </div>
+
+      <div class="form-group">
+        <label for="registerPassword">
+          Password
+        </label>
+
+        <input
+          id="registerPassword"
+          type="password"
+          placeholder="Minimum 6 characters"
+          autocomplete="new-password"
+        >
+      </div>
+
+      <button
+        id="registerBtn"
+        type="button"
+        class="primary-btn"
+      >
+        Create Account
+      </button>
+
+      <p class="auth-switch">
+        Already have an account?
+
+        <button
+          type="button"
+          class="link-btn"
+          onclick="showLogin()"
+        >
+          Login
+        </button>
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- =====================================================
+       MAIN APP
+       ===================================================== -->
+
+  <section
+    id="app"
+    class="app"
+    style="display:none;"
+  >
+
+    <!-- =================================================
+         SIDEBAR
+         ================================================= -->
+
+    <aside class="sidebar">
+
+      <!-- HEADER -->
+
+      <div class="sidebar-header">
+
+        <div class="brand">
+
+          <div class="logo-mark">
+            N
+          </div>
+
+          <div class="brand-text">
+            <strong>NTalk</strong>
+            <span>Messages</span>
+          </div>
+
+        </div>
+
+        <button
+          id="newChatBtn"
+          type="button"
+          class="icon-btn"
+          title="New chat"
+        >
+          +
+        </button>
+
+      </div>
+
+
+      <!-- SEARCH -->
+
+      <div class="search-box">
+
+        <input
+          id="searchInput"
+          type="search"
+          placeholder="Search people..."
+          autocomplete="off"
+        >
+
+      </div>
+
+
+      <!-- USERS / CHATS -->
+
+      <div
+        id="chatList"
+        class="chat-list"
+      >
+
+        <div class="empty-users">
+          No other users found
+        </div>
+
+      </div>
+
+
+      <!-- CURRENT USER -->
+
+      <div class="sidebar-profile">
+
+        <div class="profile-avatar">
+
+          <img
+            id="myAvatar"
+            src=""
+            alt="Profile"
+          >
+
+        </div>
+
+        <div class="profile-info">
+
+          <div
+            id="myName"
+            class="profile-name"
+          >
+            User
+          </div>
+
+          <div
+            id="myUsername"
+            class="profile-username"
+          >
+          </div>
+
+        </div>
+
+        <button
+          id="logoutBtn"
+          type="button"
+          class="logout-btn"
+        >
+          Logout
+        </button>
+
+      </div>
+
+    </aside>
+
+
+    <!-- =================================================
+         CHAT AREA
+         ================================================= -->
+
+    <main class="chat-area">
+
+      <!-- CHAT HEADER -->
+
+      <header class="chat-header">
+
+        <div class="chat-user">
+
+          <div class="chat-avatar">
+
+            <img
+              id="chatAvatar"
+              src=""
+              alt="Avatar"
+            >
+
+          </div>
+
+          <div class="chat-user-info">
+
+            <h2 id="chatName">
+              Select a chat
+            </h2>
+
+            <span id="chatUsername"></span>
+
+          </div>
+
+        </div>
+
+
+        <!-- ACTIONS -->
+
+        <div class="chat-actions">
+
+          <button
+            id="callBtn"
+            type="button"
+            class="icon-btn"
+            title="Call"
+          >
+            📞
+          </button>
+
+          <button
+            id="newCallBtn"
+            type="button"
+            class="icon-btn"
+            title="Call by username"
+            style="display:none;"
+          >
+            Call
+          </button>
+
+        </div>
+
+      </header>
+
+
+      <!-- =================================================
+           MESSAGES
+           ================================================= -->
+
+      <section
+        id="messages"
+        class="messages"
+      >
+
+        <div class="empty-chat">
+
+          <div class="empty-chat-icon">
+            N
+          </div>
+
+          <h3>
+            Welcome to NTalk
+          </h3>
+
+          <p>
+            Select a person to start chatting.
+          </p>
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           MESSAGE COMPOSER
+           ================================================= -->
+
+      <div class="message-composer">
+
+        <!-- FILE -->
+
+        <input
+          id="fileInput"
+          type="file"
+          hidden
+          accept="image/*,video/*,.pdf,.doc,.docx,.txt"
+        >
+
+
+        <!-- ATTACH -->
+
+        <button
+          id="attachBtn"
+          type="button"
+          class="composer-btn"
+          title="Attach"
+          onclick="document.getElementById('fileInput').click()"
+        >
+          📎
+        </button>
+
+
+        <!-- MESSAGE -->
+
+        <textarea
+          id="messageInput"
+          rows="1"
+          placeholder="Type a message..."
+        ></textarea>
+
+
+        <!-- SEND -->
+
+        <button
+          id="sendBtn"
+          type="button"
+          class="send-btn"
+          title="Send"
+        >
+          ➤
+        </button>
+
+      </div>
+
+    </main>
+
+  </section>
+
+
+  <!-- =====================================================
+       PROFILE ELEMENTS USED BY app.js
+       ===================================================== -->
+
+  <div
+    id="profilePanel"
+    style="display:none;"
+  >
+
+    <img
+      id="profileAvatar"
+      src=""
+      alt="Profile"
+    >
+
+    <span id="profileName"></span>
+
+    <span id="profileUsername"></span>
+
+  </div>
+
+
+  <!-- =====================================================
+       HIDDEN FALLBACK IDs USED BY app.js
+       These are intentionally present so every fallback
+       selector in app.js has a matching element.
+       ===================================================== -->
+
+  <div
+    id="userName"
+    style="display:none;"
+  ></div>
+
+  <div
+    id="accountName"
+    style="display:none;"
+  ></div>
+
+  <div
+    id="userUsername"
+    style="display:none;"
+  ></div>
+
+  <div
+    id="accountUsername"
+    style="display:none;"
+  ></div>
+
+  <img
+    id="userAvatar"
+    src=""
+    alt=""
+    style="display:none;"
+  >
+
+
+  <!-- =====================================================
+       FALLBACK AUTH IDs
+       ===================================================== -->
+
+  <div
+    id="loginScreen"
+    style="display:none;"
+  ></div>
+
+  <div
+    id="registerScreen"
+    style="display:none;"
+  ></div>
+
+
+  <!-- =====================================================
+       FALLBACK REGISTER IDs
+       ===================================================== -->
+
+  <input
+    id="fullName"
+    type="hidden"
+  >
+
+  <input
+    id="displayName"
+    type="hidden"
+  >
+
+  <input
+    id="username"
+    type="hidden"
+  >
+
+  <input
+    id="email"
+    type="hidden"
+  >
+
+  <input
+    id="password"
+    type="hidden"
+  >
+
+
+  <!-- =====================================================
+       FALLBACK CHAT LIST IDs
+       ===================================================== -->
+
+  <div
+    id="usersList"
+    style="display:none;"
+  ></div>
+
+  <div
+    id="contactsList"
+    style="display:none;"
+  ></div>
+
+
+  <!-- =====================================================
+       FALLBACK CHAT HEADER IDs
+       ===================================================== -->
+
+  <span
+    id="currentChatName"
+    style="display:none;"
+  ></span>
+
+  <span
+    id="activeChatName"
+    style="display:none;"
+  ></span>
+
+  <span
+    id="currentChatUsername"
+    style="display:none;"
+  ></span>
+
+  <span
+    id="activeChatUsername"
+    style="display:none;"
+  ></span>
+
+  <img
+    id="currentChatAvatar"
+    src=""
+    alt=""
+    style="display:none;"
+  >
+
+  <img
+    id="activeChatAvatar"
+    src=""
+    alt=""
+    style="display:none;"
+  >
+
+
+  <!-- =====================================================
+       FALLBACK MESSAGE IDs
+       ===================================================== -->
+
+  <div
+    id="messageList"
+    style="display:none;"
+  ></div>
+
+  <div
+    id="messagesContainer"
+    style="display:none;"
+  ></div>
+
+
+  <textarea
+    id="chatInput"
+    style="display:none;"
+  ></textarea>
+
+  <textarea
+    id="messageText"
+    style="display:none;"
+  ></textarea>
+
+
+  <!-- =====================================================
+       FALLBACK FILE ID
+       ===================================================== -->
+
+  <input
+    id="mediaInput"
+    type="file"
+    style="display:none;"
+  >
+
+
+  <!-- =====================================================
+       FALLBACK BUTTON IDs
+       ===================================================== -->
+
+  <button
+    id="loginButton"
+    type="button"
+    style="display:none;"
+  ></button>
+
+  <button
+    id="registerButton"
+    type="button"
+    style="display:none;"
+  ></button>
+
+  <button
+    id="logoutButton"
+    type="button"
+    style="display:none;"
+  ></button>
+
+  <button
+    id="sendButton"
+    type="button"
+    style="display:none;"
+  ></button>
+
+  <button
+    id="newChatButton"
+    type="button"
+    style="display:none;"
+  ></button>
+
+  <input
+    id="userSearch"
+    type="search"
+    style="display:none;"
+  >
+
+
+  <!-- =====================================================
+       PWA SERVICE WORKER
+       ===================================================== -->
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker
+          .register("sw.js")
+          .then(function () {
+            console.log("NTalk Service Worker registered");
+          })
+          .catch(function (error) {
+            console.error(
+              "Service Worker registration failed:",
+              error
+            );
+          });
+      });
+    }
+  </script>
+
+
+  <!-- APP JS MUST BE LAST -->
+  <script src="app.js"></script>
+
 </body>
 </html>
